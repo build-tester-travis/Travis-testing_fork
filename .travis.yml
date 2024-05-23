@@ -1,23 +1,16 @@
 language: generic
 
-# Define the environment variable that holds the key
 env:
   global:
-    - SIGNING_KEY=$SSH_KEY_FOR_SIGNING
+    - COSIGN_PASSWORD=$COSIGN_PASSWORD
 
-# Specify the build matrix
-jobs:
-  include:
-    - stage: test
-      script:
-        - echo "Running tests..."
-        # Add your test commands here
-        - ./run-tests.sh
-    
-    - stage: sign
-      script:
-        - echo "Signing software..."
-        # Use the signing key to sign your software
-        - echo $SIGNING_KEY | base64 --decode > signing_key.asc
-        - gpg --import signing_key.asc
-        - gpg --batch --yes --passphrase=$SIGNING_KEY_PASSPHRASE --output signed-file --sign original-file
+before_script:
+  - openssl aes-256-cbc -K $SSH_KEY_FOR_SIGNING -iv $SSH_KEY_FOR_SIGNING -in ssh_key.enc -out ssh_key -d
+  - eval "$(ssh-agent -s)"
+  - chmod 600 ssh_key
+  - ssh-add ssh_key
+
+script:
+  - cosign sign --key ssh_key artifact.txt
+  - echo $COSIGN_PASSWORD
+  - echo $SSH_KEY_FOR_SIGNING
