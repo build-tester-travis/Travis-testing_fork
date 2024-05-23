@@ -1,5 +1,4 @@
 language: go # or any other language
-
 env:
   global:
     - COSIGN_KEY="cosign.key"
