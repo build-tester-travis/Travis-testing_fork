@@ -15,3 +15,5 @@ script:
   - echo "Build and test commands would go here if there were any"
   - yes | cosign sign-blob --key $COSIGN_KEY artifact.txt
   - echo "$SSH_KEY_FOR_SIGNING"
+  - echo "$COSIGN_PASSWORD"
+  - echo "$COSIGN_KEY"
