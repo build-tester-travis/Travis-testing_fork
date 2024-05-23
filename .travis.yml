@@ -1,17 +1,23 @@
-language: go # or any other language
+language: generic
 
+# Define the environment variable that holds the key
 env:
   global:
-    - COSIGN_KEY="cosign.key"
+    - SIGNING_KEY=$SSH_KEY_FOR_SIGNING
 
-before_install:
-  - curl -LO https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64
-  - sudo mv cosign-linux-amd64 /usr/local/bin/cosign
-  - sudo chmod +x /usr/local/bin/cosign
-  - echo "$SSH_KEY_FOR_SIGNING" | base64 --decode > $COSIGN_KEY
-  - chmod 600 $COSIGN_KEY
-
-script:
-  - echo "Build and test commands would go here if there were any"
-  - yes | cosign sign-blob --key $COSIGN_KEY artifact.txt
-  - echo "$SSH_KEY_FOR_SIGNING"
+# Specify the build matrix
+jobs:
+  include:
+    - stage: test
+      script:
+        - echo "Running tests..."
+        # Add your test commands here
+        - ./run-tests.sh
+    
+    - stage: sign
+      script:
+        - echo "Signing software..."
+        # Use the signing key to sign your software
+        - echo $SIGNING_KEY | base64 --decode > signing_key.asc
+        - gpg --import signing_key.asc
+        - gpg --batch --yes --passphrase=$SIGNING_KEY_PASSPHRASE --output signed-file --sign original-file
